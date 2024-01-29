@@ -3,29 +3,28 @@ package main
 import (
 	"GoBank/api"
 	db "GoBank/db/sqlc"
+	"GoBank/db/util"
 	"database/sql"
 	"log"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbDriver      = "postgres"
-	dbSource      = "postgresql://root:secret@localhost:5432/gobank?sslmode=disable"
-	serverAddress = "0.0.0.0:8080"
-)
-
 func main() {
-
-	connection, err := sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig(".")
 	if err != nil {
-		log.Fatal("cannot connect to db:", err)
+		log.Fatal("cannot load config:", err)
+	}
+
+	connection, err := sql.Open(config.DBDriver, config.DBSource)
+	if err != nil {
+		log.Fatal("cannot wonnect to db:", err)
 	}
 
 	store := db.NewStore(connection)
 	server := api.NewServer(store)
 
-	err = server.Start(serverAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server", err)
 	}
